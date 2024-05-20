@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting } from "obsidian";
 
 import type SynapsePlugin from "./main";
 
@@ -7,8 +7,8 @@ export interface SynapsePluginSettings {
 }
 
 export const DEFAULT_SETTINGS: SynapsePluginSettings = {
-    mySetting: 'default'
-}
+    mySetting: "default",
+};
 
 export class SynapseSettingTab extends PluginSettingTab {
     plugin: SynapsePlugin;

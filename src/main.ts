@@ -1,6 +1,10 @@
+import { pipeline, cos_sim } from '@xenova/transformers';
+import { ChromaClient, Collection } from "chromadb";
 import { encodingForModel } from "js-tiktoken";
 import { TfIdf } from "natural";
-import { Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { Notice, Plugin, TFile } from "obsidian";
+
+//
 
 import { createAnkiDeck, createNewNoteOnAnki, updateExistingNoteOnAnki } from "./anki";
 import { callOpenRouter } from "./llms";
@@ -10,9 +14,18 @@ import { stripMarkdown } from "./utils";
 
 export default class SynapsePlugin extends Plugin {
     settings: SynapsePluginSettings;
+    chromaCollection: Collection;
 
     async onload() {
         await this.loadSettings();
+
+        const client = new ChromaClient({
+            path: "http://localhost:8989"
+        });
+        this.chromaCollection = await client.getOrCreateCollection({
+            name: "obsidian-synapse",
+            metadata: { "hnsw:space": "cosine" }
+        });
 
         this.addRibbonIcon(
             "brain-circuit",
@@ -25,29 +38,43 @@ export default class SynapsePlugin extends Plugin {
             },
         );
 
-        this.registerEvent(
-            this.app.workspace.on("file-menu", (menu, fileish: TAbstractFile) => {
-                if (fileish instanceof TFile && fileish.extension === "md") {
-                    menu.addItem((item) => {
-                        item.setTitle("Sync Synapse flashcards to Anki")
-                            .setIcon("brain-circuit")
-                            .onClick(() => {
-                                this.syncFlashcards(fileish);
-                            });
-                    });
-                }
-            }),
-        );
-
         this.addCommand({
             id: "synapse-sync-flashcards",
-            name: "Sync Synapse flashcards to Anki",
+            name: "Sync flashcards to Anki",
             callback: async () => {
                 const openFile: TFile | null = this.app.workspace.getActiveFile();
                 if (openFile && openFile.extension === "md") {
                     this.syncFlashcards(openFile);
                 }
             },
+        });
+
+        this.addCommand({
+            id: "synapse-index-collection",
+            name: "Index the entire vault",
+            callback: async () => {
+                const extractor = await pipeline('feature-extraction', 'Xenova/jina-embeddings-v2-small-en',
+                    { quantized: false } // Comment out this line to use the quantized version
+                );
+
+                let documents: string[] = [];
+                let ids: string[] = [];
+                for (const file of this.app.vault.getFiles()) {
+                    documents.push(await this.readCleanFile(file));
+                    ids.push(file.basename.trim())
+                }
+
+                const embeddings = await extractor(
+                    documents,
+                    { pooling: 'mean' }
+                );
+
+                console.log(embeddings)
+
+                await this.chromaCollection.upsert({ documents, ids });
+
+                new Notice("Done indexing the vault :).");
+            }
         });
 
         this.addSettingTab(new SynapseSettingTab(this.app, this));
@@ -61,15 +88,20 @@ export default class SynapsePlugin extends Plugin {
         await this.saveData(this.settings);
     }
 
+    async readCleanFile(file: TFile): Promise<string> {
+        const linkedContent = await this.app.vault.cachedRead(file);
+        let clean = await stripMarkdown(linkedContent);
+        clean = clean.replace(/\\\[!question\].+\n\n/gm, "");
+        return clean;
+    }
+
     async getRelatedDocuments(file: TFile): Promise<string[]> {
         let related: string[] = [];
         const links = this.app.metadataCache.resolvedLinks[file.path];
         for (const link of Object.keys(links)) {
             const linkedFile = this.app.vault.getFileByPath(link);
             if (linkedFile) {
-                const linkedContent = await this.app.vault.cachedRead(linkedFile);
-                let clean = await stripMarkdown(linkedContent);
-                clean = clean.replace(/\\\[!question\].+\n\n/gm, "");
+                const clean = await this.readCleanFile(linkedFile);
                 if (clean.length > 0) {
                     related.push(linkedFile.basename.trim() + "\n" + clean);
                 }
@@ -138,7 +170,7 @@ export default class SynapsePlugin extends Plugin {
             }
         }
 
-        new Notice("Done syncing flashcards...");
+        new Notice("Done syncing flashcards.");
     }
 }
 

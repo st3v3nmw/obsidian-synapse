@@ -4,8 +4,7 @@ export async function callOpenRouter(question: string, context: string): Promise
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-            Authorization: `Bearer `,
-            "X-Title": "Obsidian Synapse",
+            Authorization: `Bearer`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify({

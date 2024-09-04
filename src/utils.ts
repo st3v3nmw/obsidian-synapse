@@ -22,3 +22,10 @@ export async function stripMarkdown(md: string): Promise<string> {
     // trim extra whitespace
     return clean.trim();
 }
+
+// https://stackoverflow.com/a/41015840
+export function interpolate(str: string, params: Record<string, unknown>): string {
+    const names: string[] = Object.keys(params);
+    const vals: unknown[] = Object.values(params);
+    return new Function(...names, `return \`${str}\`;`)(...vals);
+}

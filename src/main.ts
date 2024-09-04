@@ -1,10 +1,6 @@
-import { pipeline, cos_sim } from '@xenova/transformers';
-import { ChromaClient, Collection } from "chromadb";
 import { encodingForModel } from "js-tiktoken";
 import { TfIdf } from "natural";
 import { Notice, Plugin, TFile } from "obsidian";
-
-//
 
 import { createAnkiDeck, createNewNoteOnAnki, updateExistingNoteOnAnki } from "./anki";
 import { callOpenRouter } from "./llms";
@@ -14,18 +10,9 @@ import { stripMarkdown } from "./utils";
 
 export default class SynapsePlugin extends Plugin {
     settings: SynapsePluginSettings;
-    chromaCollection: Collection;
 
     async onload() {
         await this.loadSettings();
-
-        const client = new ChromaClient({
-            path: "http://localhost:8989"
-        });
-        this.chromaCollection = await client.getOrCreateCollection({
-            name: "obsidian-synapse",
-            metadata: { "hnsw:space": "cosine" }
-        });
 
         this.addRibbonIcon(
             "brain-circuit",
@@ -50,31 +37,14 @@ export default class SynapsePlugin extends Plugin {
         });
 
         this.addCommand({
-            id: "synapse-index-collection",
-            name: "Index the entire vault",
+            id: "synapse-regenerate-flashcards",
+            name: "Regenerate flashcards & sync",
             callback: async () => {
-                const extractor = await pipeline('feature-extraction', 'Xenova/jina-embeddings-v2-small-en',
-                    { quantized: false } // Comment out this line to use the quantized version
-                );
-
-                let documents: string[] = [];
-                let ids: string[] = [];
-                for (const file of this.app.vault.getFiles()) {
-                    documents.push(await this.readCleanFile(file));
-                    ids.push(file.basename.trim())
+                const openFile: TFile | null = this.app.workspace.getActiveFile();
+                if (openFile && openFile.extension === "md") {
+                    this.syncFlashcards(openFile, true);
                 }
-
-                const embeddings = await extractor(
-                    documents,
-                    { pooling: 'mean' }
-                );
-
-                console.log(embeddings)
-
-                await this.chromaCollection.upsert({ documents, ids });
-
-                new Notice("Done indexing the vault :).");
-            }
+            },
         });
 
         this.addSettingTab(new SynapseSettingTab(this.app, this));
@@ -110,7 +80,7 @@ export default class SynapsePlugin extends Plugin {
         return related;
     }
 
-    async syncFlashcards(file: TFile) {
+    async syncFlashcards(file: TFile, regenerate: boolean = false) {
         // find the questions
         let originalContent = await this.app.vault.read(file);
         let workingCopy = file.basename.trim() + "\n" + (await stripMarkdown(originalContent));
@@ -128,38 +98,61 @@ export default class SynapsePlugin extends Plugin {
         const encoding = encodingForModel("gpt-4");
         const initialContextLength = encoding.encode(workingCopy).length;
 
+        // create deck if required
+        const deck = file.path.split("/").slice(0, -1).join("::");
+        await createAnkiDeck(this.settings.ankiConnectEndpoint, deck);
+
         // create new flashcards or update existing ones
         for (const qn of questions) {
-            const deck = file.path.split("/").slice(0, -1).join("::");
-            await createAnkiDeck(deck);
-
-            if (qn.id) {
+            if (qn.id != null && !regenerate) {
                 // update an existing note on Anki
-                await updateExistingNoteOnAnki(qn, deck);
-            } else {
-                // generate the context
-                let results: [string, number][] = [];
-                tfidf.tfidfs(qn.content, (i, measure) => {
-                    results.push([relatedDocuments[i], measure]);
-                });
-                results.sort((a, b) => b[1] - a[1]);
+                await updateExistingNoteOnAnki(this.settings.ankiConnectEndpoint, qn, deck);
+                continue;
+            }
 
-                let context = workingCopy.repeat(1);
-                let contextLength = initialContextLength;
-                for (const [doc, score] of results) {
-                    if (score <= 0 || contextLength > 2000) {
-                        break;
-                    }
+            // generate the context
+            let results: [string, number][] = [];
+            tfidf.tfidfs(qn.content, (i, measure) => {
+                results.push([relatedDocuments[i], measure]);
+            });
+            results.sort((a, b) => b[1] - a[1]);
 
-                    context += "\n\n" + doc;
-                    contextLength += encoding.encode(doc).length;
+            let context = workingCopy.repeat(1);
+            let contextLength = initialContextLength;
+            for (const [doc, score] of results) {
+                if (score <= 0 || contextLength > this.settings.maxContextLength) {
+                    break;
                 }
 
-                // get the answer
-                const answer = await callOpenRouter(qn.content, context);
+                context += "\n\n" + doc;
+                contextLength += encoding.encode(doc).length;
+            }
 
+            // get the answer
+            const answer = await callOpenRouter(
+                this.settings.apiKey,
+                this.settings.model,
+                this.settings.prompt,
+                qn.content,
+                context,
+            );
+
+            if (answer.length == 0) {
+                // TODO: handle errors
+                continue;
+            }
+
+            if (qn.id) {
+                // update the note on Anki
+                await updateExistingNoteOnAnki(this.settings.ankiConnectEndpoint, qn, deck, answer);
+            } else {
                 // create the note (& flashcards) on Anki
-                const response = await createNewNoteOnAnki(qn, answer, deck);
+                const response = await createNewNoteOnAnki(
+                    this.settings.ankiConnectEndpoint,
+                    qn,
+                    answer,
+                    deck,
+                );
 
                 // Update the file
                 originalContent = originalContent.replace(

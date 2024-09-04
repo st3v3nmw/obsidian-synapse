@@ -6,15 +6,19 @@ export interface SynapsePluginSettings {
     model: string;
     apiKey: string;
     prompt: string;
+    maxContextLength: number;
+    ankiConnectEndpoint: string;
 }
 
 export const DEFAULT_SETTINGS: SynapsePluginSettings = {
-    model: "anthropic/claude-3-sonnet",
+    model: "anthropic/claude-3.5-sonnet",
     apiKey: "",
-    prompt: (
-        'In about 30 words, give a concise answer to the question "${question}"' +
-        'Base your answer on the following context:\n${context}'
-    )
+    prompt:
+        'In one sentence, give a concise answer to the question "${question}". ' +
+        "DO NOT repeat anything from the prompt in your answer. \n" +
+        "Base your answer on the following context:\n${context}",
+    maxContextLength: 2000,
+    ankiConnectEndpoint: "http://127.0.0.1:8765",
 };
 
 export class SynapseSettingTab extends PluginSettingTab {
@@ -33,33 +37,66 @@ export class SynapseSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Model")
             .setDesc("Name of LLM model to use")
-            .addText(text => text
-                .setValue(this.plugin.settings.model)
-                .onChange(async (value) => {
+            .addText((text) =>
+                text.setValue(this.plugin.settings.model).onChange(async (value) => {
                     this.plugin.settings.model = value;
                     await this.plugin.saveSettings();
-                }));
+                }),
+            );
 
         new Setting(containerEl)
             .setName("API Key")
             .setDesc("API key provided by your LLM provider")
-            .addTextArea(text => text
-                .setPlaceholder("Bearer: ...")
-                .setValue(this.plugin.settings.apiKey)
-                .onChange(async (value) => {
-                    this.plugin.settings.model = value;
-                    await this.plugin.saveSettings();
-                }));
+            .addTextArea((text) =>
+                text
+                    .setPlaceholder("some-api-key")
+                    .setValue(this.plugin.settings.apiKey)
+                    .onChange(async (value) => {
+                        this.plugin.settings.apiKey = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
 
         new Setting(containerEl)
             .setName("Prompt")
-            .setDesc("Give instructions to the LLM")
-            .addTextArea(text => text
-                .setPlaceholder("Give a concise answer to ${question} based on the following context: ${context}")
-                .setValue(this.plugin.settings.prompt)
-                .onChange(async (value) => {
-                    this.plugin.settings.model = value;
-                    await this.plugin.saveSettings();
-                }));
+            .setDesc("The prompt MUST include ${question} and ${context}")
+            .addTextArea((text) =>
+                text
+                    .setPlaceholder(
+                        "Give a concise answer to ${question} based on the following context: ${context}",
+                    )
+                    .setValue(this.plugin.settings.prompt)
+                    .onChange(async (value) => {
+                        this.plugin.settings.prompt = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        new Setting(containerEl)
+            .setName("Maximum Context Length")
+            .setDesc("Length of (note with flashcards + relevant linked documents)")
+            .addSlider((slider) =>
+                slider
+                    .setLimits(1000, 10_000, 500)
+                    .setValue(this.plugin.settings.maxContextLength)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        this.plugin.settings.maxContextLength = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        new Setting(containerEl)
+            .setName("AnkiConnect Endpoint")
+            .setDesc("API endpoint provided by AnkiConnect")
+            .addText((text) =>
+                text
+                    .setPlaceholder("http://127.0.0.1:8765")
+                    .setValue(this.plugin.settings.ankiConnectEndpoint)
+                    .onChange(async (value) => {
+                        this.plugin.settings.ankiConnectEndpoint = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
     }
 }

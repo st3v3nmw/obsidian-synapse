@@ -14,8 +14,8 @@ export const DEFAULT_SETTINGS: SynapsePluginSettings = {
     model: "anthropic/claude-3.5-sonnet",
     apiKey: "",
     prompt:
-        'In one sentence, give a concise answer to the question "${question}". ' +
-        "DO NOT repeat anything from the prompt in your answer. \n" +
+        'In one short sentence, give a concise answer to the question "${question}". ' +
+        "DO NOT repeat the instructions or question in your answer. \n" +
         "Base your answer on the following context:\n${context}",
     maxContextLength: 2000,
     ankiConnectEndpoint: "http://127.0.0.1:8765",

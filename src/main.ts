@@ -139,6 +139,7 @@ export default class SynapsePlugin extends Plugin {
 
             if (answer.length == 0) {
                 // TODO: handle errors
+                console.log(`An error occurred while generating an answer to ${qn.content}`)
                 continue;
             }
 

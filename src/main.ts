@@ -83,8 +83,9 @@ export default class SynapsePlugin extends Plugin {
     async syncFlashcards(file: TFile, regenerate: boolean = false) {
         // find the questions
         let originalContent = await this.app.vault.read(file);
-        let workingCopy = file.basename.trim() + "\n" + (await stripMarkdown(originalContent));
-        const questions: Question[] = getQuestions(workingCopy);
+        const topic = file.basename.trim();
+        let workingCopy = topic + "\n" + (await stripMarkdown(originalContent));
+        const questions: Question[] = getQuestions(topic, workingCopy);
 
         // build the TfIdf object
         const tfidf = new TfIdf();
@@ -139,7 +140,7 @@ export default class SynapsePlugin extends Plugin {
 
             if (answer.length == 0) {
                 // TODO: handle errors
-                console.log(`An error occurred while generating an answer to ${qn.content}`)
+                console.log(`An error occurred while generating an answer to ${qn.content}`);
                 continue;
             }
 
@@ -168,12 +169,12 @@ export default class SynapsePlugin extends Plugin {
     }
 }
 
-function getQuestions(document: string): Question[] {
+function getQuestions(topic: string, document: string): Question[] {
     let matches = document.matchAll(/\\\[!question\](.+?(?=\^|$))\^?(.+)?/gm);
     let questions: Question[] = [];
     for (const match of matches) {
         const id = match[2] ? match[2].trim() : match[2];
-        questions.push({ content: match[1].trim(), id });
+        questions.push({ topic, content: match[1].trim(), id });
     }
     return questions;
 }

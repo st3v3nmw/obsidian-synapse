@@ -29,6 +29,7 @@
         "natural": "^7.1.0",
         "openai": "^4.57.1",
         "remark": "^15.0.1",
+        "remark-unlink": "^5.0.0",
         "strip-markdown": "^6.0.0"
     }
 }

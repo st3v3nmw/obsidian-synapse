@@ -15,6 +15,8 @@ export const DEFAULT_SETTINGS: SynapsePluginSettings = {
     apiKey: "",
     prompt:
         'In one short sentence, give a concise answer to the question "${question}". ' +
+        "For math equations, use the format: <anki-mathjax>equation</anki-mathjax>. " +
+        "Wrap code in italics <i>code</i>. " +
         "DO NOT repeat the instructions or question in your answer. \n" +
         "Base your answer on the following context:\n${context}",
     maxContextLength: 2000,

@@ -21,8 +21,9 @@ export async function createNewNoteOnAnki(
     return await callAnki(endpoint, "addNote", {
         note: {
             deckName: deck,
-            modelName: "Basic",
+            modelName: "Synapse",
             fields: {
+                Topic: qn.topic,
                 Front: qn.content,
                 Back: answer,
             },
@@ -57,6 +58,7 @@ export async function updateExistingNoteOnAnki(
             note: {
                 id: Number(qn.id),
                 fields: {
+                    Topic: qn.topic,
                     Front: qn.content,
                     Back: answer,
                 },

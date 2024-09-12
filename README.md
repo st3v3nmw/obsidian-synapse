@@ -16,14 +16,10 @@ Generate flashcard answers with LLMs based on your Obsidian notes and sync them 
 }
 ```
 
+Create a note model called Synapse...
+
 Add your question as a call-out:
 
 ```
 > [!question] What is X?
 ```
-
-## TODO
-
--   Add an action button within the editor/call-out to:
-    -   Show the note info?
-    -   Regenerate the flashcard answer

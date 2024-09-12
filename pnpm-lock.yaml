@@ -17,6 +17,9 @@ dependencies:
   remark:
     specifier: ^15.0.1
     version: 15.0.1
+  remark-unlink:
+    specifier: ^5.0.0
+    version: 5.0.0
   strip-markdown:
     specifier: ^6.0.0
     version: 6.0.0
@@ -1433,6 +1436,13 @@ packages:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
     dev: false
 
+  /mdast-squeeze-paragraphs@6.0.0:
+    resolution: {integrity: sha512-6NDbJPTg0M0Ye+TlYwX1KJ1LFbp515P2immRJyJQhc9Na9cetHzSoHNYIQcXpANEAP1sm9yd/CTZU2uHqR5A+w==}
+    dependencies:
+      '@types/mdast': 4.0.4
+      unist-util-visit: 5.0.0
+    dev: false
+
   /mdast-util-from-markdown@2.0.1:
     resolution: {integrity: sha512-aJEUyzZ6TzlsX2s5B4Of7lN7EQtAxvtradMMglCQDyaTFgse6CmtmdJ15ElnVRlCg1vpNyVtbem0PWzlNieZsA==}
     dependencies:
@@ -2111,6 +2121,14 @@ packages:
       '@types/mdast': 4.0.4
       mdast-util-to-markdown: 2.1.0
       unified: 11.0.5
+    dev: false
+
+  /remark-unlink@5.0.0:
+    resolution: {integrity: sha512-8NFrI3SecxhOLb734tKaxcU//lNDABabz1I26MGjdlpkUg1I+Fr7lyqL9ckxaCB4kErXD10mScPD7yhCXX4Pfw==}
+    dependencies:
+      '@types/mdast': 4.0.4
+      mdast-squeeze-paragraphs: 6.0.0
+      unist-util-visit: 5.0.0
     dev: false
 
   /remark@15.0.1:

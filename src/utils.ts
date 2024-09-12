@@ -1,4 +1,5 @@
 import { remark } from "remark";
+import remarkUnlink from "remark-unlink";
 import strip from "strip-markdown";
 
 export async function stripMarkdown(md: string): Promise<string> {
@@ -7,6 +8,7 @@ export async function stripMarkdown(md: string): Promise<string> {
             .use(strip, {
                 keep: ["code", "table", "listItem"],
             })
+            .use(remarkUnlink)
             .process(md),
     );
 

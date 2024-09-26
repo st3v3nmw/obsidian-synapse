@@ -10,7 +10,7 @@ care about, for instance the dates of historical events. Or I didn't like how it
 
 Of course this can easily be fixed by reviewing the list of generated flashcards to weed out what you don't want. Or you can update your prompt to do exactly what you want. But why do that when we can create a new plugin? :)
 
-This plugin acts as a middle ground between creating all your flashcards manually and having an LLM generate them for you.
+This plugin acts as a middle ground between creating all your flashcards manually and having an LLM generate them for you. You provide the questions and the LLM generates the answers based on your notes.
 
 Please note that this plugin is a proof of concept. I don't use it in my day-to-day. If you use the [Spaced Repetition](https://github.com/st3v3nmw/obsidian-spaced-repetition) plugin, you can try the [Obsidian Flashcards LLM](https://github.com/crybot/obsidian-flashcards-llm) plugin instead.
 

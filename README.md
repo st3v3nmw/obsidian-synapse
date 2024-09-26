@@ -18,8 +18,8 @@ Please note that this plugin is a proof of concept. I don't use it in my day-to-
 
 ### Anki
 
-- Install Anki
-- Install AnkiConnect
+- Install [Anki](https://apps.ankiweb.net/)
+- Install [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
     -   Add `app://obsidian.md` to the `webCorsOriginList` entry in the add-on's config (`Tools -> Add-ons -> AnkiConnect -> Config`). It should look like this afterwards:
 
 ```json
@@ -33,7 +33,7 @@ Please note that this plugin is a proof of concept. I don't use it in my day-to-
 }
 ```
 
-- Next, create a note type called Synapse (`Tools -> Manage Notes Type -> Add`). It should have 3 fields: `Front`, `Back`, & `Topic`. It's basically, a `Basic` field with a `Topic` field to add context on which file the card was generated from.
+- Next, create a note type called `Synapse` (`Tools -> Manage Notes Type -> Add`). It should have 3 fields: `Front`, `Back`, & `Topic`. It's basically, a `Basic` note with a `Topic` field to add context on which file the card was generated from.
 
 You can use this as the template:
 
@@ -59,7 +59,7 @@ Back:
 
 ### Plugin
 
-In the plugin's settings, add your Open Router API Key.
+In the plugin's settings, add your [OpenRouter API Key](https://openrouter.ai/docs/api-keys).
 
 If you wish, you can update the LLM prompt. This is the default:
 

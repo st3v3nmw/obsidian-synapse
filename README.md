@@ -59,6 +59,8 @@ Back:
 
 ### Plugin
 
+Install the plugin using [BRAT](https://github.com/TfTHacker/obsidian42-brat).
+
 In the plugin's settings, add your [OpenRouter API Key](https://openrouter.ai/docs/api-keys).
 
 If you wish, you can update the LLM prompt. This is the default:

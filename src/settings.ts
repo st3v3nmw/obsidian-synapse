@@ -6,21 +6,41 @@ export interface SynapsePluginSettings {
     model: string;
     apiKey: string;
     prompt: string;
-    maxContextLength: number;
-    ankiConnectEndpoint: string;
 }
 
 export const DEFAULT_SETTINGS: SynapsePluginSettings = {
     model: "anthropic/claude-3.5-sonnet",
     apiKey: "",
-    prompt:
-        'In one short sentence, give a concise answer to the question "${question}". ' +
-        "For math equations, use the format: <anki-mathjax>equation</anki-mathjax>. " +
-        "Wrap code in italics <i>code</i>. " +
-        "DO NOT repeat the instructions or question in your answer. \n" +
-        "Base your answer on the following context:\n${context}",
-    maxContextLength: 2000,
-    ankiConnectEndpoint: "http://127.0.0.1:8765",
+    prompt: `Generate a large set of flashcards STRICTLY from the text after ====.
+
+The flashcards should cover:
+- Key terms and definitions
+- Core principles
+- Important facts
+- Cause-and-effect relationships
+- Comparisons and contrasts between related concepts
+- Historical context and development
+- Potential critiques or limitations
+- Common misconceptions and their corrections
+
+Each flashcard should:
+- Pose a single and specific question
+- Be atomic and self-contained, providing enough context to make sense in isolation
+- Test deep understanding rather than mere memorization
+- Have brief but complete answers
+
+Use the following format for each flashcard: Question?::Answer.
+
+- Use markdown with Mathjax equations and code as required
+- The questions and answers MUST be concise (one sentence each)
+- Avoid vague questions like what is the main X, what is a common Y, what are some ..., etc
+- Existing flashcards are wrapped in %%. Do NOT repeat any existing flashcards
+
+Your response MUST only contain flashcards separated by newlines.
+
+====
+
+`,
 };
 
 export class SynapseSettingTab extends PluginSettingTab {
@@ -70,33 +90,6 @@ export class SynapseSettingTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.prompt)
                     .onChange(async (value) => {
                         this.plugin.settings.prompt = value;
-                        await this.plugin.saveSettings();
-                    }),
-            );
-
-        new Setting(containerEl)
-            .setName("Maximum Context Length")
-            .setDesc("Length of (note with flashcards + relevant linked documents)")
-            .addSlider((slider) =>
-                slider
-                    .setLimits(1000, 10_000, 500)
-                    .setValue(this.plugin.settings.maxContextLength)
-                    .setDynamicTooltip()
-                    .onChange(async (value) => {
-                        this.plugin.settings.maxContextLength = value;
-                        await this.plugin.saveSettings();
-                    }),
-            );
-
-        new Setting(containerEl)
-            .setName("AnkiConnect Endpoint")
-            .setDesc("API endpoint provided by AnkiConnect")
-            .addText((text) =>
-                text
-                    .setPlaceholder("http://127.0.0.1:8765")
-                    .setValue(this.plugin.settings.ankiConnectEndpoint)
-                    .onChange(async (value) => {
-                        this.plugin.settings.ankiConnectEndpoint = value;
                         await this.plugin.saveSettings();
                     }),
             );

@@ -1,6 +1,6 @@
 {
     "id": "obsidian-synapse",
-    "name": "Obsidian Synapse",
+    "name": "Synapse",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
     "description": "Generate flashcard answers with LLMs based on your Obsidian notes and sync them to Anki.",

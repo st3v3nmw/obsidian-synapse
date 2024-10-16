@@ -13,21 +13,14 @@ export async function stripMarkdown(md: string): Promise<string> {
     );
 
     // remove Obsidian block IDs
-    clean = clean.replace(/^\^.+$\n/gm, "");
+    clean = clean.replace(/\^\S+$/gm, "");
 
     // remove Obsidian wiki links with display text
-    clean = clean.replace(/\\\[\\\[.+\|(.*)\]\]/gm, "$1");
+    clean = clean.replace(/\\\[\\\[[^\|]+\|([^\]]+)\]\]/gm, "$1");
 
     // remove included media
-    clean = clean.replace(/^!\\\[\\\[.+\]\]\n\n/gm, "");
+    clean = clean.replace(/^!\\\[\\\[.+\]\]$/gm, "");
 
     // trim extra whitespace
     return clean.trim();
-}
-
-// https://stackoverflow.com/a/41015840
-export function interpolate(str: string, params: Record<string, unknown>): string {
-    const names: string[] = Object.keys(params);
-    const vals: unknown[] = Object.values(params);
-    return new Function(...names, `return \`${str}\`;`)(...vals);
 }
